@@ -311,18 +311,100 @@ const waitForSignal = async (signalId) => {
             }]
         },
         {
+        {
             id: "step-14",
-            title_p: "Finalizing full lifecycle case with audit trail...",
-            title_s: "Case complete - Full lifecycle processed (Filing through Representment)",
+            title_p: "Updating case status - representment phase complete...",
+            title_s: "Representment denied - Chargeback upheld, merchant may escalate to pre-arbitration",
             reasoning: [
-                "CASE LIFECYCLE SUMMARY:",
-                "  Phase 1 - Filing: Chargeback filed successfully on VROL",
-                "  Phase 2 - Representment: Evidence reviewed and found insufficient",
-                "  Decision: CHARGEBACK UPHELD",
-                "  Cardholder Credit: $4,890.00 (now permanent)",
-                "  Compliance: All Visa network rules followed",
-                "  Audit Trail: Complete with AI analysis + human confirmation",
-                "  Next Possible Action: Merchant pre-arbitration (30 days)"
+                "REPRESENTMENT PHASE COMPLETE:",
+                "  Decision: CHARGEBACK UPHELD - Merchant evidence insufficient",
+                "  Merchant acquirer notified of denial",
+                "  Cardholder provisional credit becomes permanent",
+                "  Pre-arbitration window: 30 calendar days",
+                "  Monitoring for merchant escalation..."
+            ]
+        },
+        {
+            id: "step-15",
+            title_p: "Receiving pre-arbitration notification from Visa network...",
+            title_s: "Pre-arbitration filed - Merchant GreenLeaf Home Goods escalating through Visa",
+            reasoning: [
+                "ALERT: Pre-arbitration notification received from Visa network",
+                "Merchant: GreenLeaf Home Goods has elected to escalate",
+                "Case Reference: CB-2026-0892 (Pre-Arb Phase)",
+                "Filing Date: February 20, 2026 (Day 18 of 30-day window)",
+                "Merchant Claim: New evidence available - independent quality assessment report",
+                "Action Required: Review pre-arbitration evidence package within 10 business days"
+            ],
+            artifacts: [{
+                id: "prearb-notice", type: "json", label: "Pre-Arbitration Filing Details",
+                data: {
+                    caseRef: "CB-2026-0892-PA",
+                    filingParty: "GreenLeaf Home Goods (via First National Payment Solutions)",
+                    escalationDate: "2026-02-20",
+                    responseDeadline: "2026-03-06",
+                    newEvidence: "Independent quality assessment report",
+                    networkFee: "$500 (assessed to losing party)",
+                    status: "PENDING REVIEW"
+                }
+            }]
+        },
+        {
+            id: "step-16",
+            title_p: "Agent reviewing pre-arbitration evidence package...",
+            title_s: "Pre-arb evidence reviewed - No material new evidence found",
+            reasoning: [
+                "DOCUMENT EXTRACTION - Pre-Arbitration Evidence Package:",
+                "  Document 1: Independent Quality Assessment Report",
+                "    - Authored by merchant-commissioned inspector (bias risk: HIGH)",
+                "    - Report states product 'meets industry standards' but does not address cardholder's specific complaints",
+                "    - No comparison to product listing description provided",
+                "  Document 2: Updated shipping manifest with carrier GPS data",
+                "    - Confirms delivery to correct address (already established)",
+                "    - Does not resolve signature mismatch issue",
+                "  Document 3: Merchant's refund policy excerpt",
+                "    - Policy requires returns within 14 days",
+                "    - Cardholder complaint filed on Day 3 - within policy window",
+                "ASSESSMENT: No material new evidence. Merchant-commissioned report lacks independence.",
+                "RECOMMENDATION: Maintain original decision - UPHOLD CHARGEBACK"
+            ]
+        },
+        {
+            id: "step-17",
+            title_p: "Filing pre-arbitration response on Visa network...",
+            title_s: "Pre-arbitration response filed - Chargeback upheld, original decision maintained",
+            reasoning: [
+                "Portal: Visa Resolve Online (VROL) - Pre-Arbitration Response",
+                "Case Reference: CB-2026-0892-PA",
+                "Response: MAINTAIN ORIGINAL DECISION",
+                "Rationale Filed:",
+                "  1. Merchant quality report is not independently authored",
+                "  2. Delivery confirmation does not address product quality dispute",
+                "  3. Cardholder complaint was within merchant's own return policy window",
+                "  4. Original Reason Code 13.3 requirements remain unsatisfied",
+                "Network Fee: $500 assessed to merchant (losing party)",
+                "Status: RESPONSE ACCEPTED by Visa network"
+            ],
+            artifacts: [{
+                id: "vrol-video-prearb", type: "video", label: "VROL Pre-Arb Filing - Browser Agent Recording",
+                videoPath: "/data/vrol_filing_cb003.webm"
+            }]
+        },
+        {
+            id: "step-18",
+            title_p: "Finalizing full lifecycle case - filing through pre-arbitration...",
+            title_s: "Case complete - Chargeback upheld through pre-arbitration, $4,890 permanent credit",
+            reasoning: [
+                "FULL CASE LIFECYCLE SUMMARY:",
+                "  Phase 1 - Filing: Chargeback filed on VROL (Reason 13.3)",
+                "  Phase 2 - Representment: Merchant evidence reviewed, found insufficient",
+                "  Phase 3 - Pre-Arbitration: Merchant escalated, no new material evidence",
+                "  Final Decision: CHARGEBACK UPHELD at all stages",
+                "  Cardholder Credit: $4,890.00 (permanent)",
+                "  Network Fee: $500 assessed to merchant",
+                "  Compliance: All Visa network rules and deadlines met",
+                "  Audit Trail: Complete - AI analysis + human confirmation at each stage",
+                "  Case Duration: 26 days (filing to final resolution)"
             ]
         }
     ];

@@ -40,5 +40,19 @@
         "merchantName": "GreenLeaf Home Goods",
         "reasonCode": "13.3",
         "cardNetwork": "Visa"
+    },
+    {
+        "id": "CB_004",
+        "category": "Chargeback Lifecycle",
+        "name": "Alex Chen - Low-Value Writeoff ($5.00)",
+        "stockId": "CB-2026-0234",
+        "year": "2026-02-24",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "cardholderName": "Alex Chen",
+        "transactionAmount": "$5.00",
+        "merchantName": "QuickBite Express",
+        "reasonCode": "13.1",
+        "cardNetwork": "Visa"
     }
 ]

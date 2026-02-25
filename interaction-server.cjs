@@ -31,7 +31,7 @@ if (!fs.existsSync(path.join(DATA_DIR, 'processes.json')) && fs.existsSync(path.
 }
 const signalFile = path.join(__dirname, 'interaction-signals.json');
 if (!fs.existsSync(signalFile)) {
-    fs.writeFileSync(signalFile, JSON.stringify({ APPROVE_CHARGEBACK_FILING: false, APPROVE_EVIDENCE_DECISION: false }, null, 4));
+    fs.writeFileSync(signalFile, JSON.stringify({ APPROVE_CHARGEBACK_FILING: false, DENY_CHARGEBACK_FILING: false, APPROVE_EVIDENCE_DECISION: false, APPROVE_WRITEOFF: false }, null, 4));
 }
 if (!fs.existsSync(FEEDBACK_QUEUE_PATH)) fs.writeFileSync(FEEDBACK_QUEUE_PATH, '[]');
 if (!fs.existsSync(KB_VERSIONS_PATH)) fs.writeFileSync(KB_VERSIONS_PATH, '[]');
@@ -78,7 +78,7 @@ const server = http.createServer(async (req, res) => {
         state = { sent: false, confirmed: false, signals: {} };
         console.log('Demo Reset Triggered');
         const sf = path.join(__dirname, 'interaction-signals.json');
-        fs.writeFileSync(sf, JSON.stringify({ APPROVE_CHARGEBACK_FILING: false, APPROVE_EVIDENCE_DECISION: false }, null, 4));
+        fs.writeFileSync(sf, JSON.stringify({ APPROVE_CHARGEBACK_FILING: false, DENY_CHARGEBACK_FILING: false, APPROVE_EVIDENCE_DECISION: false, APPROVE_WRITEOFF: false }, null, 4));
 
         runningProcesses.forEach((proc, id) => { try { process.kill(-proc.pid, 'SIGKILL'); } catch (e) { } });
         runningProcesses.clear();
@@ -89,7 +89,8 @@ const server = http.createServer(async (req, res) => {
                 const cases = [
                     { id: "CB_001", name: "Sarah Mitchell - Merchandise Not Received", category: "Chargeback Lifecycle", stockId: "CB-2026-0847", year: "2026-02-24", status: "In Progress", currentStatus: "Initializing...", cardholderName: "Sarah Mitchell", transactionAmount: "$2,340.00", merchantName: "ElectroMax Online Store", reasonCode: "13.1", cardNetwork: "Visa" },
                     { id: "CB_002", name: "James Thornton - Suspected Friendly Fraud ($18,750)", category: "Chargeback Lifecycle", stockId: "CB-2026-1203", year: "2026-02-24", status: "In Progress", currentStatus: "Initializing...", cardholderName: "James K. Thornton", transactionAmount: "$18,750.00", merchantName: "Prestige Luxe Boutique", reasonCode: "10.4", cardNetwork: "Visa" },
-                    { id: "CB_003", name: "Maria Rivera-Santos - Full Lifecycle (Filing + Representment)", category: "Chargeback Lifecycle", stockId: "CB-2026-0592", year: "2026-02-24", status: "In Progress", currentStatus: "Initializing...", cardholderName: "Maria Rivera-Santos", transactionAmount: "$4,890.00", merchantName: "GreenLeaf Home Goods", reasonCode: "13.3", cardNetwork: "Visa" }
+                    { id: "CB_003", name: "Maria Rivera-Santos - Full Lifecycle (Filing + Representment)", category: "Chargeback Lifecycle", stockId: "CB-2026-0592", year: "2026-02-24", status: "In Progress", currentStatus: "Initializing...", cardholderName: "Maria Rivera-Santos", transactionAmount: "$4,890.00", merchantName: "GreenLeaf Home Goods", reasonCode: "13.3", cardNetwork: "Visa" },
+                    { id: "CB_004", name: "Alex Chen - Low-Value Writeoff ($5.00)", category: "Chargeback Lifecycle", stockId: "CB-2026-0234", year: "2026-02-24", status: "In Progress", currentStatus: "Initializing...", cardholderName: "Alex Chen", transactionAmount: "$5.00", merchantName: "QuickBite Express", reasonCode: "13.1", cardNetwork: "Visa" }
                 ];
                 fs.writeFileSync(processesPath, JSON.stringify(cases, null, 4));
                 fs.writeFileSync(FEEDBACK_QUEUE_PATH, '[]');
@@ -98,7 +99,8 @@ const server = http.createServer(async (req, res) => {
                 const scripts = [
                     { file: 'chargeback_story_1_happy_path.cjs', id: 'CB_001' },
                     { file: 'chargeback_story_2_needs_attention.cjs', id: 'CB_002' },
-                    { file: 'chargeback_story_3_representment.cjs', id: 'CB_003' }
+                    { file: 'chargeback_story_3_representment.cjs', id: 'CB_003' },
+                    { file: 'chargeback_story_4_writeoff.cjs', id: 'CB_004' }
                 ];
                 let totalDelay = 0;
                 scripts.forEach((script) => {

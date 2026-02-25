@@ -28,23 +28,24 @@ const updateProcessListStatus = async (processId, status, currentStatus) => {
     const apiUrl = process.env.VITE_API_URL || 'http://localhost:3001';
     try {
         const response = await fetch(`${apiUrl}/api/update-status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: processId, status, currentStatus }) });
-        if (!response.ok) throw new Error(`Server returned ${response.status}`);
-    } catch (e) {
-        try { const processes = JSON.parse(fs.readFileSync(PROCESSES_FILE, 'utf8')); const idx = processes.findIndex(p => p.id === String(processId)); if (idx !== -1) { processes[idx].status = status; processes[idx].currentStatus = currentStatus; fs.writeFileSync(PROCESSES_FILE, JSON.stringify(processes, null, 4)); } } catch (err) { }
-    }
+    } catch (e) { console.error('Status update failed:', e.message); }
 };
 
-const waitForSignal = async (signalId) => {
-    console.log(`Waiting for human signal: ${signalId}...`);
+const waitForEitherSignal = async (signalIds) => {
+    console.log(`Waiting for one of signals: ${signalIds.join(', ')}...`);
     const signalFile = path.join(__dirname, '../interaction-signals.json');
+    // Clear any stale signals first
     for (let i = 0; i < 15; i++) {
         try {
             if (fs.existsSync(signalFile)) {
                 const content = fs.readFileSync(signalFile, 'utf8');
                 if (!content) continue;
                 const signals = JSON.parse(content);
-                if (signals[signalId]) {
-                    delete signals[signalId];
+                let changed = false;
+                for (const sid of signalIds) {
+                    if (signals[sid]) { delete signals[sid]; changed = true; }
+                }
+                if (changed) {
                     const tmp = signalFile + '.' + Math.random().toString(36).substring(7) + '.tmp';
                     fs.writeFileSync(tmp, JSON.stringify(signals, null, 4));
                     fs.renameSync(tmp, signalFile);
@@ -53,19 +54,22 @@ const waitForSignal = async (signalId) => {
             }
         } catch (e) { await delay(Math.floor(Math.random() * 200) + 100); }
     }
+    // Poll until one of the signals fires
     while (true) {
         try {
             if (fs.existsSync(signalFile)) {
                 const content = fs.readFileSync(signalFile, 'utf8');
                 if (content) {
                     const signals = JSON.parse(content);
-                    if (signals[signalId]) {
-                        console.log(`Signal ${signalId} received!`);
-                        delete signals[signalId];
-                        const tmp = signalFile + '.' + Math.random().toString(36).substring(7) + '.tmp';
-                        fs.writeFileSync(tmp, JSON.stringify(signals, null, 4));
-                        fs.renameSync(tmp, signalFile);
-                        return true;
+                    for (const sid of signalIds) {
+                        if (signals[sid]) {
+                            console.log(`Signal ${sid} received!`);
+                            delete signals[sid];
+                            const tmp = signalFile + '.' + Math.random().toString(36).substring(7) + '.tmp';
+                            fs.writeFileSync(tmp, JSON.stringify(signals, null, 4));
+                            fs.renameSync(tmp, signalFile);
+                            return sid;
+                        }
                     }
                 }
             }
@@ -88,7 +92,7 @@ const waitForSignal = async (signalId) => {
         }
     });
 
-    const steps = [
+    const preHitlSteps = [
         {
             id: "step-1",
             title_p: "Receiving new dispute - high-value flag triggered...",
@@ -174,28 +178,33 @@ const waitForSignal = async (signalId) => {
                     pdfPath: "/data/fraud_investigation_report_CB002.pdf"
                 }
             ]
-        },
-        {
-            id: "step-6",
-            title_p: "Awaiting human approver decision...",
-            title_s: "Human override received - Approver authorized chargeback filing",
-            hitl: true,
-            reasoning: [
-                "Agent Recommendation: DO NOT FILE (62% friendly fraud probability)",
-                "Transaction Pattern: Single high-value purchase ($18,750) at luxury retailer",
-                "Risk Factors: IP geolocation mismatch, first-time merchant, amount exceeds cardholder avg by 340%",
-                "Conflicting Signal: Cardholder confirmed delivery address matches billing",
-                "Requires human judgment to override AI recommendation"
-            ],
-            artifacts: [{
-                id: "chargeback-decision", type: "decision", label: "Filing Decision",
-                options: [
-                    { value: "approve", label: "Override AI — File chargeback ($18,750 for cardholder)", signal: "APPROVE_CHARGEBACK_FILING" },
-                    { value: "deny", label: "Accept AI recommendation — Do not file", signal: "APPROVE_CHARGEBACK_FILING" },
-                    { value: "escalate", label: "Escalate to senior fraud analyst for further review", signal: "APPROVE_CHARGEBACK_FILING" }
-                ]
-            }]
-        },
+        }
+    ];
+
+    const hitlStep = {
+        id: "step-6",
+        title_p: "Awaiting human approver decision...",
+        title_s_approve: "Human override received - Approver authorized chargeback filing",
+        title_s_deny: "Human accepted AI recommendation - Chargeback not filed",
+        hitl: true,
+        reasoning: [
+            "Agent Recommendation: DO NOT FILE (62% friendly fraud probability)",
+            "Transaction Pattern: Single high-value purchase ($18,750) at luxury retailer",
+            "Risk Factors: IP geolocation mismatch, first-time merchant, amount exceeds cardholder avg by 340%",
+            "Conflicting Signal: Cardholder confirmed delivery address matches billing",
+            "Requires human judgment to override AI recommendation"
+        ],
+        artifacts: [{
+            id: "chargeback-decision", type: "decision", label: "Filing Decision",
+            options: [
+                { value: "approve", label: "Override AI \u2014 File chargeback ($18,750 for cardholder)", signal: "APPROVE_CHARGEBACK_FILING" },
+                { value: "deny", label: "Accept AI recommendation \u2014 Do not file", signal: "DENY_CHARGEBACK_FILING" },
+                { value: "escalate", label: "Escalate to senior fraud analyst for further review", signal: "APPROVE_CHARGEBACK_FILING" }
+            ]
+        }]
+    };
+
+    const approveSteps = [
         {
             id: "step-7",
             title_p: "Filing chargeback on VROL with human override notation...",
@@ -243,10 +252,49 @@ const waitForSignal = async (signalId) => {
         }
     ];
 
-    for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
-        const isFinal = i === steps.length - 1;
+    const denySteps = [
+        {
+            id: "step-7",
+            title_p: "Closing case per AI recommendation - chargeback not filed...",
+            title_s: "Case closed - AI recommendation accepted, chargeback not filed",
+            reasoning: [
+                "Human Decision: ACCEPT AI RECOMMENDATION - Do not file chargeback",
+                "Basis: 62% friendly fraud probability exceeds filing threshold",
+                "3D Secure authentication confirmed cardholder participation in transaction",
+                "Device and IP analysis consistent with legitimate cardholder activity",
+                "Case Status: CLOSED - No chargeback filed",
+                "Audit Trail: Human concurrence with AI decision documented"
+            ]
+        },
+        {
+            id: "step-8",
+            title_p: "Sending cardholder notification with denial reasoning...",
+            title_s: "Cardholder notified - Dispute denial email sent with detailed reasoning",
+            reasoning: [
+                "Notification Type: Dispute Denial - Cardholder Email",
+                "Recipient: James K. Thornton (james.thornton@email.com)",
+                "Content: Detailed explanation of denial reasoning",
+                "Key Points: 3D Secure authentication, device history consistency",
+                "Appeal Window: 30 days to submit additional evidence",
+                "Compliance: Fair lending disclosure included"
+            ],
+            artifacts: [{
+                id: "denial-email", type: "email_draft", label: "Cardholder Denial Notification",
+                data: {
+                    isIncoming: false,
+                    to: "james.thornton@email.com",
+                    from: "disputes@abcbank.com",
+                    cc: "compliance@abcbank.com",
+                    subject: "Dispute Decision - Transaction $18,750.00 at Prestige Luxe Boutique",
+                    body: "Dear Mr. Thornton,\n\nThank you for contacting ABC Bank regarding the transaction of $18,750.00 at Prestige Luxe Boutique on January 15, 2026.\n\nAfter a thorough investigation, we have determined that the evidence does not support filing a chargeback for this transaction. Our findings include:\n\n  1. 3D Secure Verification: The transaction was fully authenticated through Verified by Visa, confirming cardholder participation at the time of purchase.\n\n  2. Device Consistency: The device used for this transaction matches the device used for four prior undisputed transactions on your account over the past six months.\n\n  3. Location Match: The IP address and shipping address are consistent with your known location in Portland, OR.\n\nBased on these factors, the dispute has been closed without filing a chargeback.\n\nIf you have additional evidence or information that was not considered in this review, you may submit it within 30 days by replying to this email or contacting our dispute resolution team at 1-800-555-0199.\n\nWe take every dispute seriously and appreciate your understanding.\n\nSincerely,\nABC Bank Dispute Resolution Center"
+                }
+            }]
+        }
+    ];
 
+    // Execute pre-HITL steps
+    for (let i = 0; i < preHitlSteps.length; i++) {
+        const step = preHitlSteps[i];
         updateProcessLog(PROCESS_ID, {
             id: step.id,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -255,29 +303,75 @@ const waitForSignal = async (signalId) => {
         });
         await updateProcessListStatus(PROCESS_ID, "In Progress", step.title_p);
         await delay(2000);
-
-        if (step.hitl) {
-            updateProcessLog(PROCESS_ID, {
-                id: step.id,
-                title: step.title_s,
-                status: "warning",
-                reasoning: step.reasoning || [],
-                artifacts: step.artifacts || []
-            });
-            await updateProcessListStatus(PROCESS_ID, "Needs Attention", "Human approval required - 62% friendly fraud probability");
-            await waitForSignal("APPROVE_CHARGEBACK_FILING");
-            await updateProcessListStatus(PROCESS_ID, "In Progress", "Human override received - Proceeding with filing");
-        } else {
-            updateProcessLog(PROCESS_ID, {
-                id: step.id,
-                title: step.title_s,
-                status: isFinal ? "completed" : "success",
-                reasoning: step.reasoning || [],
-                artifacts: step.artifacts || []
-            });
-            await updateProcessListStatus(PROCESS_ID, isFinal ? "Done" : "In Progress", step.title_s);
-            await delay(1500);
-        }
+        updateProcessLog(PROCESS_ID, {
+            id: step.id,
+            title: step.title_s,
+            status: "success",
+            reasoning: step.reasoning || [],
+            artifacts: step.artifacts || []
+        });
+        await updateProcessListStatus(PROCESS_ID, "In Progress", step.title_s);
+        await delay(1500);
     }
-    console.log(`${PROCESS_ID} Complete: ${CASE_NAME}`);
+
+    // HITL step
+    updateProcessLog(PROCESS_ID, {
+        id: hitlStep.id,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        title: hitlStep.title_p,
+        status: "processing"
+    });
+    await updateProcessListStatus(PROCESS_ID, "In Progress", hitlStep.title_p);
+    await delay(2000);
+    updateProcessLog(PROCESS_ID, {
+        id: hitlStep.id,
+        title: hitlStep.title_p,
+        status: "warning",
+        reasoning: hitlStep.reasoning,
+        artifacts: hitlStep.artifacts
+    });
+    await updateProcessListStatus(PROCESS_ID, "Needs Attention", "Human approval required - 62% friendly fraud probability");
+
+    // Wait for either APPROVE or DENY signal
+    const receivedSignal = await waitForEitherSignal(["APPROVE_CHARGEBACK_FILING", "DENY_CHARGEBACK_FILING"]);
+
+    // Branch based on which signal was received
+    const isDeny = receivedSignal === "DENY_CHARGEBACK_FILING";
+    const postHitlSteps = isDeny ? denySteps : approveSteps;
+    const hitlTitle = isDeny ? hitlStep.title_s_deny : hitlStep.title_s_approve;
+    const statusMsg = isDeny ? "AI recommendation accepted - Closing case" : "Human override received - Proceeding with filing";
+
+    // Update HITL step with final title
+    updateProcessLog(PROCESS_ID, {
+        id: hitlStep.id,
+        title: hitlTitle,
+        status: isDeny ? "success" : "success",
+        reasoning: hitlStep.reasoning,
+        artifacts: hitlStep.artifacts
+    });
+    await updateProcessListStatus(PROCESS_ID, "In Progress", statusMsg);
+
+    // Execute post-HITL steps
+    for (let i = 0; i < postHitlSteps.length; i++) {
+        const step = postHitlSteps[i];
+        const isFinal = i === postHitlSteps.length - 1;
+        updateProcessLog(PROCESS_ID, {
+            id: step.id,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            title: step.title_p,
+            status: "processing"
+        });
+        await updateProcessListStatus(PROCESS_ID, "In Progress", step.title_p);
+        await delay(2000);
+        updateProcessLog(PROCESS_ID, {
+            id: step.id,
+            title: step.title_s,
+            status: isFinal ? "completed" : "success",
+            reasoning: step.reasoning || [],
+            artifacts: step.artifacts || []
+        });
+        await updateProcessListStatus(PROCESS_ID, isFinal ? "Done" : "In Progress", step.title_s);
+        await delay(1500);
+    }
+    console.log(`${PROCESS_ID} Complete: ${CASE_NAME} (Path: ${isDeny ? 'DENY' : 'APPROVE'})`);
 })();

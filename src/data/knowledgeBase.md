@@ -76,6 +76,38 @@ Human approval is required when:
 - IP and geolocation data
 - Transaction pattern analysis
 
+## Low-Value Dispute Writeoff Policy (Section 7)
+
+For disputes below the writeoff threshold, ABC Bank follows a cost-benefit approach to avoid spending more on the chargeback process than the disputed amount.
+
+### Writeoff Threshold
+- **Current Threshold: $25.00**
+- Disputes at or below $25 are eligible for direct writeoff without filing a chargeback
+- Estimated chargeback filing cost: $35.00 (network fees + processing time)
+- Writeoff saves the bank the difference between filing cost and recovery
+
+### Eligibility Criteria
+All of the following must be met for writeoff approval:
+1. Transaction amount is at or below the $25 writeoff threshold
+2. Cardholder has no more than 2 disputes in the trailing 12 months
+3. No pattern of repeated low-value dispute abuse detected
+4. Cardholder account is in good standing
+
+### Writeoff Process
+1. Agent performs cost-benefit analysis against threshold
+2. Agent verifies cardholder history and dispute frequency
+3. Agent recommends writeoff with rationale
+4. **Human confirmation required** - Writeoff must be approved by a human reviewer
+5. Decision logged against SOP Section 7 with audit trail
+6. Refund issued directly to cardholder (no chargeback filed)
+7. Cardholder notified via email confirmation
+
+### Monitoring and Abuse Prevention
+- Cardholders with 3+ writeoffs in 12 months are flagged for review
+- Merchants with high writeoff volumes are escalated to merchant monitoring
+- Writeoff threshold reviewed quarterly by Risk Committee
+- All writeoffs logged for aggregate reporting and trend analysis
+
 ## Compliance Requirements
 - All filings must comply with Visa network operating regulations
 - Response deadlines: 30 days for merchant, 120 days for filing window

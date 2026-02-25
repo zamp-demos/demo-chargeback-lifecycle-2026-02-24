@@ -929,7 +929,7 @@ const ProcessDetails = () => {
                 setFullLogs(incomingLogs);
                 setData(jsonData);
 
-                const isDemoCase = ['CB_001', 'CB_002', 'CB_003'].includes(id);
+                const isDemoCase = ['CB_001', 'CB_002', 'CB_003', 'CB_004'].includes(id);
                 const localStatus = id.startsWith('DIR_') ? null : sessionStorage.getItem(`case_status_${id}`);
                 const isActive = sessionStorage.getItem(`case_active_${id}`) === 'true';
                 const effectiveStatus = localStatus || processMetadata?.status || jsonData.keyDetails?.status;
@@ -980,7 +980,7 @@ const ProcessDetails = () => {
         const currentIndex = displayLogs.length;
         const remainingLogs = fullLogs.slice(currentIndex);
 
-        const isInfiniteCase = ['CB_001', 'CB_002', 'CB_003'].includes(id);
+        const isInfiniteCase = ['CB_001', 'CB_002', 'CB_003', 'CB_004'].includes(id);
         let logIndex = 0;
 
         const interval = setInterval(() => {
