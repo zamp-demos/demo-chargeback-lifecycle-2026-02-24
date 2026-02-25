@@ -929,7 +929,7 @@ const ProcessDetails = () => {
                 setFullLogs(incomingLogs);
                 setData(jsonData);
 
-                const isDemoCase = ['DIR_001', 'DIR_002', 'DIR_003'].includes(id);
+                const isDemoCase = ['CB_001', 'CB_002', 'CB_003'].includes(id);
                 const localStatus = id.startsWith('DIR_') ? null : sessionStorage.getItem(`case_status_${id}`);
                 const isActive = sessionStorage.getItem(`case_active_${id}`) === 'true';
                 const effectiveStatus = localStatus || processMetadata?.status || jsonData.keyDetails?.status;
@@ -980,7 +980,7 @@ const ProcessDetails = () => {
         const currentIndex = displayLogs.length;
         const remainingLogs = fullLogs.slice(currentIndex);
 
-        const isInfiniteCase = ['DIR_001', 'DIR_002', 'DIR_003'].includes(id);
+        const isInfiniteCase = ['CB_001', 'CB_002', 'CB_003'].includes(id);
         let logIndex = 0;
 
         const interval = setInterval(() => {
@@ -1095,7 +1095,7 @@ const ProcessDetails = () => {
             extractedData: associatedData
         };
 
-        // REMOVED: Simulation trigger for DIR_001 email draft should be handled by backend
+        // REMOVED: Simulation trigger for CB_001 email draft should be handled by backend
 
 
         setSelectedArtifact(processedArt);
@@ -1117,7 +1117,7 @@ const ProcessDetails = () => {
         if (log.artifacts && Array.isArray(log.artifacts)) {
             log.artifacts.forEach(art => {
                 if (!acc.some(exist => exist.id === art.id)) {
-                    // REMOVED: Simulation trigger for DIR_001 should be handled by backend
+                    // REMOVED: Simulation trigger for CB_001 should be handled by backend
                     const processedArt = { ...art };
                     acc.push(processedArt);
                 }

@@ -127,6 +127,18 @@ const server = http.createServer(async (req, res) => {
         if (req.method === 'POST') {
             const body = await parseBody(req);
             state.sent = body.sent || false;
+            // When email is sent, also trigger the APPROVE_EVIDENCE_DECISION signal
+            // so CB_003 simulation can continue
+            if (body.sent) {
+                try {
+                    const sf = path.join(__dirname, 'interaction-signals.json');
+                    let signals = {};
+                    try { signals = JSON.parse(fs.readFileSync(sf, 'utf8')); } catch (e) { }
+                    signals['APPROVE_EVIDENCE_DECISION'] = true;
+                    fs.writeFileSync(sf, JSON.stringify(signals, null, 4));
+                    console.log('Email sent - triggered APPROVE_EVIDENCE_DECISION signal');
+                } catch (e) { console.error('Failed to write signal on email send:', e); }
+            }
             res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ status: 'ok' }));
         }

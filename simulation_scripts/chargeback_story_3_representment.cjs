@@ -277,11 +277,22 @@ const waitForSignal = async (signalId) => {
             title_s: "Human analyst confirms - Uphold chargeback (representment denied)",
             hitl: true,
             reasoning: [
-                "Agent Recommendation: UPHOLD CHARGEBACK",
-                "Key Factors: Unaddressed material complaint + signature mismatch",
-                "Human Decision: ACCEPT - Uphold chargeback",
-                "Representment Status: DENIED"
-            ]
+                "Agent Recommendation: UPHOLD CHARGEBACK — deny merchant representment",
+                "Evidence Gap: Merchant provided delivery photo but signature does not match cardholder",
+                "Material Complaint: Product quality issue not addressed in merchant response",
+                "Reason Code 13.3 supports cardholder when goods materially differ from description",
+                "Draft notification email ready for analyst review and send"
+            ],
+            artifacts: [{
+                id: "representment-email", type: "email_draft", label: "Representment Decision Email",
+                data: {
+                    to: "disputes@greenleafhomegoods.com",
+                    from: "chargeback-ops@abcbank.com",
+                    cc: "maria.rivera-santos@email.com",
+                    subject: "Representment Decision — Case CB-2026-0892 — Chargeback Upheld",
+                    body: "Dear GreenLeaf Home Goods Disputes Team,\n\nThis notice confirms the outcome of your representment submission for the following case:\n\n  Case Reference: CB-2026-0892\n  Cardholder: Maria Rivera-Santos\n  Transaction Amount: $4,890.00\n  Reason Code: Visa 13.3 (Not as Described)\n\nAfter review of the evidence submitted, ABC Bank has determined that the representment does not sufficiently address the cardholder's claim. Specifically:\n\n  1. Delivery confirmation was provided, however the signature on file does not match the cardholder's known signature.\n  2. The material quality complaint raised by the cardholder was not addressed in your evidence package.\n  3. Product photos submitted by the cardholder show significant variance from the listing description.\n\nAccordingly, the chargeback of $4,890.00 is UPHELD and the provisional credit to the cardholder will become permanent.\n\nYou may escalate this matter to pre-arbitration within 30 calendar days if you wish to dispute this decision.\n\nRegards,\nABC Bank Chargeback Operations"
+                }
+            }]
         },
         {
             id: "step-13",

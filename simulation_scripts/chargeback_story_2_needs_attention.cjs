@@ -181,11 +181,20 @@ const waitForSignal = async (signalId) => {
             title_s: "Human override received - Approver authorized chargeback filing",
             hitl: true,
             reasoning: [
-                "Agent Recommendation: DO NOT FILE (62% friendly fraud)",
-                "Human Decision: OVERRIDE - File chargeback",
-                "Approver rationale recorded in case audit trail",
-                "Proceeding with chargeback filing per human authorization"
-            ]
+                "Agent Recommendation: DO NOT FILE (62% friendly fraud probability)",
+                "Transaction Pattern: Single high-value purchase ($18,750) at luxury retailer",
+                "Risk Factors: IP geolocation mismatch, first-time merchant, amount exceeds cardholder avg by 340%",
+                "Conflicting Signal: Cardholder confirmed delivery address matches billing",
+                "Requires human judgment to override AI recommendation"
+            ],
+            artifacts: [{
+                id: "chargeback-decision", type: "decision", label: "Filing Decision",
+                options: [
+                    { value: "approve", label: "Override AI — File chargeback ($18,750 for cardholder)", signal: "APPROVE_CHARGEBACK_FILING" },
+                    { value: "deny", label: "Accept AI recommendation — Do not file", signal: "APPROVE_CHARGEBACK_FILING" },
+                    { value: "escalate", label: "Escalate to senior fraud analyst for further review", signal: "APPROVE_CHARGEBACK_FILING" }
+                ]
+            }]
         },
         {
             id: "step-7",
