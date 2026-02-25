@@ -1,0 +1,44 @@
+[
+    {
+        "id": "CB_001",
+        "category": "Chargeback Lifecycle",
+        "name": "Sarah Mitchell - Merchandise Not Received",
+        "stockId": "CB-2026-0847",
+        "year": "2026-02-24",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "cardholderName": "Sarah Mitchell",
+        "transactionAmount": "$2,340.00",
+        "merchantName": "ElectroMax Online Store",
+        "reasonCode": "13.1",
+        "cardNetwork": "Visa"
+    },
+    {
+        "id": "CB_002",
+        "category": "Chargeback Lifecycle",
+        "name": "James Thornton - Suspected Friendly Fraud ($18,750)",
+        "stockId": "CB-2026-1203",
+        "year": "2026-02-24",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "cardholderName": "James K. Thornton",
+        "transactionAmount": "$18,750.00",
+        "merchantName": "Prestige Luxe Boutique",
+        "reasonCode": "10.4",
+        "cardNetwork": "Visa"
+    },
+    {
+        "id": "CB_003",
+        "category": "Chargeback Lifecycle",
+        "name": "Maria Rivera-Santos - Full Lifecycle (Filing + Representment)",
+        "stockId": "CB-2026-0592",
+        "year": "2026-02-24",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "cardholderName": "Maria Rivera-Santos",
+        "transactionAmount": "$4,890.00",
+        "merchantName": "GreenLeaf Home Goods",
+        "reasonCode": "13.3",
+        "cardNetwork": "Visa"
+    }
+]
