@@ -311,7 +311,6 @@ const waitForSignal = async (signalId) => {
             }]
         },
         {
-        {
             id: "step-14",
             title_p: "Updating case status - representment phase complete...",
             title_s: "Representment denied - Chargeback upheld, merchant may escalate to pre-arbitration",
